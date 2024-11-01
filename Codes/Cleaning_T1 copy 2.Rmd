@@ -1,0 +1,471 @@
+---
+title: "T11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+library(rrcov)
+library(nnet)
+library(MASS)
+library(factoextra)
+library(stats)
+library(ICSNP)
+library(mshap)
+library(mvnormtest)
+library(cluster)
+library(CCA)
+library(olsrr)
+library(ggplot2)
+library(stats)
+library(flexmix)
+library(moments)
+library(GGally)
+library(mice)
+library(dplyr)
+library(corrplot)
+```
+
+
+```{r cars}
+tt1 <- read.csv("Trimmed_T1.csv")
+  View(tt1)
+```
+
+
+##NULL VALUES
+```{r}
+# Check for null values column-wise
+null_count <- colSums(is.na(tt1))
+print(null_count)
+```
+
+```{r }
+
+library(mice)
+
+# Check for missing values
+colSums(is.na(tt1))
+
+# Create an imputation model
+impute_model <- mice(tt1, method = "mean") 
+
+# Perform imputation
+imputed_data_T1 <- complete(impute_model)
+
+```
+```{r}
+View(imputed_data_T1)
+```
+
+
+##Remove duplictates
+```{r}
+# Remove duplicates
+duplicates <- unique(imputed_data_T1)
+
+# Print the dataset without duplicates
+print(duplicates)
+```
+
+##Filtering out categorical variables 
+```{r}
+# Filter out categorical variables from the dataset
+filteredd <- imputed_data_T1[, sapply(imputed_data_T1, is.numeric)]
+
+# Print the dataset without categorical variables
+View(filteredd)
+```
+
+##OUTLIERS
+```{r}
+# Checking a box plot for each numerical variable in the dataset
+boxplot(filteredd$commitMessageLengthTotal)
+```
+
+```{r}
+# Iterating over each column
+outliers <- list()
+for (col in colnames(filteredd)) {
+  # Check for outliers in the current column
+  column <- filteredd[, col]
+  outliers[[col]] <- boxplot.stats(column)$out
+}
+
+# Printing the outliers for each variable
+for (col in colnames(filteredd)) {
+  cat("Outliers in", col, ":", outliers[[col]], "\n")
+}
+```
+
+##Normalizing the dataset 
+```{r}
+# Apply min-max scaling
+D1_normalized <- apply(filteredd, 2, function(x) (x - min(x)) / (max(x) - min(x)))
+
+# Print the normalized dataset
+View(D1_normalized)
+```
+##Duplicates
+```{r}
+# Finding duplicates based on all columns
+duplicates <- filteredd[duplicated(filteredd) | duplicated(filteredd, fromLast = TRUE), ]
+print(duplicates)
+
+```
+
+
+##Transformation
+```{r}
+# Applying transformation to all columns
+transformed_data <- as.data.frame(apply(filteredd, 2, log))
+View(transformed_data)
+
+```
+```{r}
+summary_data <- summary(transformed_data)
+
+# Printing the summary statistics
+print(summary_data)
+```
+
+
+#### STATISTICAL ANALYSIS 
+```{r}
+# Calculating the descriptive statistics with standard deviation
+stats <- sapply(filteredd, function(x) c(Min = min(x), Q1 = quantile(x, 0.25), Median = median(x),
+                                   Mean = mean(x), Q3 = quantile(x, 0.75), Max = max(x), SD = sd(x)))
+
+# Print the results in a table
+print(stats)
+```
+
+
+
+```{r}
+# Calculating the correlation matrix
+correlation_matrix <- cor(filteredd)
+
+# Printing the correlation matrix
+cat("Correlation Matrix:\n")
+print(correlation_matrix)
+
+# Calculating the correlation summary
+correlation_summary <- summary(correlation_matrix)
+
+# Printing the correlation summary
+cat("\nCorrelation Summary:\n")
+print(correlation_summary)
+```
+
+
+
+
+##Goodness of fit 
+
+##Chi-Squared 
+```{r}
+
+# Specify the variable for which you want to perform the goodness-of-fit test
+variable2 <- "teamNumber"
+variable3<- "teamMemberCount"
+variable4 <- "femaleTeamMembersPercent"
+variable5 <- "teamMemberResponseCount"
+variable6 <- "meetingHoursTotal"
+variable7 <- "inPersonMeetingHoursTotal"
+variable8 <- "nonCodingDeliverablesHoursTotal"
+variable9 <- "codingDeliverablesHoursTotal"
+variable10 <- "helpHoursTotal"
+variable11 <- "leadAdminHoursResponseCount"
+variable12 <- "leadAdminHoursTotal"
+variable13 <- "globalLeadAdminHoursResponseCount"
+variable14 <- "uniqueCommitMessageCount"
+variable15 <- "uniqueCommitMessagePercent"
+variable16 <- "commitMessageLengthTotal"
+variable17 <- "issueCount"
+variable18 <- "onTimeIssueCount"
+variable19 <- "commitCount"
+# Perform the goodness-of-fit test
+result2 <- chisq.test(table(filteredd[[variable2]]))
+result3 <- chisq.test(table(filteredd[[variable3]]))
+result4 <- chisq.test(table(filteredd[[variable4]]))
+result5 <- chisq.test(table(filteredd[[variable5]]))
+result6 <- chisq.test(table(filteredd[[variable6]]))
+result7 <- chisq.test(table(filteredd[[variable7]]))
+result8 <- chisq.test(table(filteredd[[variable8]]))
+result9 <- chisq.test(table(filteredd[[variable9]]))
+result10 <- chisq.test(table(filteredd[[variable10]]))
+result11 <- chisq.test(table(filteredd[[variable11]]))
+result12 <- chisq.test(table(filteredd[[variable12]]))
+result13 <- chisq.test(table(filteredd[[variable13]]))
+result14 <- chisq.test(table(filteredd[[variable14]]))
+result15 <- chisq.test(table(filteredd[[variable15]]))
+result16 <- chisq.test(table(filteredd[[variable16]]))
+result17 <- chisq.test(table(filteredd[[variable17]]))
+result18 <- chisq.test(table(filteredd[[variable18]]))
+result19 <- chisq.test(table(filteredd[[variable19]]))
+
+# Print the test result
+print(result2)
+print(result3)
+print(result4)
+print(result5)
+print(result6)
+print(result7)
+print(result8)
+print(result9)
+print(result10)
+print(result11)
+print(result12)
+print(result13)
+print(result14)
+print(result15)
+print(result16)
+print(result17)
+print(result18)
+print(result19)
+
+```
+
+##Shapiro-Wilk test
+```{r}
+# Specifying the variables for which you want to perform the Shapiro-Wilk test
+variables <- c("teamMemberCount","femaleTeamMembersPercent","teamMemberResponseCount","meetingHoursTotal","inPersonMeetingHoursTotal", "nonCodingDeliverablesHoursTotal", "codingDeliverablesHoursTotal","helpHoursTotal",  "leadAdminHoursResponseCount","leadAdminHoursTotal","commitCount", "uniqueCommitMessageCount", "uniqueCommitMessagePercent")
+
+# Performing the Shapiro-Wilk test for each variable
+results <- list()
+for (variable in variables) {
+  if (length(unique(filteredd[[variable]])) > 1) {
+    results[[variable]] <- shapiro.test(filteredd[[variable]])
+  } else {
+    cat("Variable:", variable, "- Skipped (No variability)\n\n")
+  }
+}
+
+# Printing the test results
+for (variable in variables) {
+  if (variable %in% names(results)) {
+    cat("Variable:", variable, "\n")
+    print(results[[variable]])
+    cat("\n")
+  }
+}
+```
+
+##KS TEST 
+```{r}
+for (variables in names(filteredd)) {
+  result <- ks.test(filteredd[[variables]], "pnorm")
+  
+  cat("Variable:", variable, "\n")
+  cat("KS statistic:", result$statistic, "\n")
+  cat("p-value:", result$p.value, "\n")
+  cat("\n")
+}
+```
+
+```{r}
+for (variables in names(filteredd)) {
+  result <- ks.test(filteredd[[variables]], "pnorm")
+  
+  cat("Variable:", variable, "\n")
+  cat("KS statistic:", result$statistic, "\n")
+  cat("p-value:", result$p.value, "\n")
+  cat("\n")
+}
+```
+
+
+```{r}
+group1 <- filteredd$group1
+group2 <- filteredd$group2
+result <- t.test(group1, group2, var.equal = TRUE)
+result <- t.test(group1, group2, var.equal = FALSE)
+print(result$p.value)
+
+```
+
+## DATA VISUALIZATION 
+```{r}
+
+##Histograms for quantitative variables
+library(ggplot2)
+library(gridExtra)
+
+num_variables <- ncol(filteredd)
+
+# Defining a vector of colors
+colors <- c("blue", "blue", "blue", "blue", "blue")
+
+# Loop through each variable
+for (i in 1:num_variables) {
+  # New plot for each variable
+  hist(filteredd[,i], col = colors[i %/% length(colors) + 1],
+       main = paste("Histogram of", colnames(filteredd)[i]),
+       xlab = colnames(filteredd)[i])
+}
+```
+
+
+```{r}
+# Bar plots for specific categorical variables
+barplot_semester <- ggplot(tt1, aes(x = semester, fill = semester)) +
+  geom_bar() +
+  labs(x = "Semester", y = "Count") +
+  ggtitle("Bar plot of Semester") +
+  theme_minimal()
+
+barplot_teamLeadGender <- ggplot(tt1, aes(x = teamLeadGender, fill = teamLeadGender)) +
+  geom_bar() +
+  labs(x = "Team Lead Gender", y = "Count") +
+  ggtitle("Bar plot of Team Lead Gender") +
+  theme_minimal()
+
+barplot_teamDistribution <- ggplot(tt1, aes(x = teamDistribution, fill = teamDistribution)) +
+  geom_bar() +
+  labs(x = "Team Distribution", y = "Count") +
+  ggtitle("Bar plot of Team Distribution") +
+  theme_minimal()
+
+# Display the bar plots
+barplot_semester
+barplot_teamLeadGender
+barplot_teamDistribution
+```
+
+##Correlation Plot
+```{r}
+#Correlation matrix
+library(corrplot)
+cor_matrix <- cor(filteredd)
+
+#Correlation plot
+corrplot(cor_matrix, method = "number", tl.col = "black", tl.srt = 45)
+```
+
+
+##FEATURE ENGINEERING 
+
+```{r}
+# Finding variables above the threshold of 0.7
+threshold <- 0.7
+highly_corrVars <- which(cor_matrix > threshold, arr.ind = TRUE)
+highly_corrVars<- highly_corrVars[highly_corrVars[, 1] != highly_corrVars[, 2], ]
+highly_corrVars <- unique(colnames(filteredd) [highly_corrVars[, 1]])
+
+# Drop variables above the threshold
+filteredd_filtered <- filteredd[, !colnames(filteredd) %in% highly_corrVars]
+View(filteredd_filtered)
+```
+
+```{r}
+```
+
+```{r}
+library(factoextra)
+pca <- prcomp(filteredd_filtered, scale. = TRUE)
+summary(pca)
+
+# Principal components
+pcs <- pca$x
+
+# Loadings
+loadings <- pca$rotation
+
+```
+```{r}
+pca <- prcomp(filteredd, scale. = TRUE)
+pcs <- as.data.frame(pca$x)  # Principal components
+loadings <- as.data.frame(pca$rotation)  # Loadings
+fviz_pca(pca, label = "var")  # Displays the variance explained by each principal component
+fviz_pca_ind(pca, label = "var")  # Displays the data points projected onto the principal components
+```
+
+
+
+##Binary logistic regression 
+
+```{r}
+unique(tt1$productLetterGrade)
+tt1$productLetterGrade <- ifelse(tt1$productLetterGrade == 2, 1, tt1$productLetterGrade)
+
+```
+
+```{r}
+# Convert the values in the y column to be within the range of 0 and 1
+tt1$productLetterGrade <- ifelse(tt1$productLetterGrade == 2, 1, tt1$productLetterGrade)
+
+# Fit the binary logistic regression model
+model <- glm(productLetterGrade ~ teamMemberCount + femaleTeamMembersPercent+ meetingHoursTotal + nonCodingDeliverablesHoursTotal +  codingDeliverablesHoursTotal + helpHoursTotal+ leadAdminHoursTotal+ uniqueCommitMessagePercent, data = tt1, family = binomial)
+# Print the summary of the model
+
+summary(model)
+```
+
+
+```{r cars}
+tt11 <- read.csv("Trimmed_T1copy.csv")
+  View(tt11)
+```
+
+
+```{r}
+# Load the necessary libraries
+library(readr)
+library(dplyr)
+
+# Fit the binary logistic regression model
+model <- glm(productLetterGrade ~ teamMemberCount + femaleTeamMembersPercent+ nonCodingDeliverablesHoursTotal +  codingDeliverablesHoursTotal + helpHoursTotal+ leadAdminHoursTotal+ uniqueCommitMessagePercent, data = tt11, family = binomial)
+
+# Print the summary of the model
+summary(model)
+
+```
+
+```{r}
+# Fit the binary logistic regression model
+model2 <- glm(productLetterGrade ~ teamMemberCount + femaleTeamMembersPercent+ teamMemberResponseCount + nonCodingDeliverablesHoursTotal + meetingHoursTotal+ + codingDeliverablesHoursTotal+ nonCodingDeliverablesHoursTotal +commitMessageLengthTotal+ commitCount+ uniqueCommitMessageCount + leadAdminHoursTotal+ uniqueCommitMessagePercent + leadAdminHoursResponseCount+ commitMessageLengthTotal+ issueCount +helpHoursTotal, data = tt11, family = binomial)
+
+# Print the summary of the model
+summary(model2)
+
+```
+
+```{r}
+model3 <- glm(productLetterGrade ~ teamMemberCount + nonCodingDeliverablesHoursTotal + meetingHoursTotal+ nonCodingDeliverablesHoursTotal + commitMessageLengthTotal + uniqueCommitMessagePercent + commitMessageLengthTotal + issueCount , data = tt11, family = binomial)
+
+# Print the summary of the model
+summary(model3)
+
+```
+
+
+```{r}
+tt11$predictprob <- round(fitted(model3), )
+View(head(tt11 , n=40))
+
+```
+
+
+```{r }
+
+library(mice)
+
+# Check for missing values
+colSums(is.na(tt11)) 
+
+# Create an imputation model
+impute_modelll <- mice(tt11, method = "mean") 
+
+# Perform imputation
+imputed_data_T12 <- complete(impute_modelll)
+
+```
+
+
+
+
